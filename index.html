@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historico Whatsap BETA - Inovar Personalizações</title>
+    <style>
+        #loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            background: black;
+            width: 0%;
+            height: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading"></div>
+    <div id="insert"></div>
+</body>
+<script>
+    
+var hrefChange = () => {
+    var params = document.location.href.replace(document.location.origin+document.location.pathname+"#", "");
+
+    var messageList = JSON.parse(decodeURI(params))
+    document.getElementById("insert").innerHTML = "";
+
+    var i = messageList.length-1;
+    var myinter = setInterval(() => {
+        document.getElementById("insert").innerHTML += messageList[i--] + "<hr>";
+        
+        document.getElementById("loading").style.width = 100 - ((i / (messageList.length-1)) * 100) + "%";
+        if(i == 0){
+            clearInterval(myinter)
+        }
+    }, 1);
+}
+
+window.addEventListener("load", hrefChange);
+window.addEventListener('popstate', hrefChange);
+</script>
+</html>
