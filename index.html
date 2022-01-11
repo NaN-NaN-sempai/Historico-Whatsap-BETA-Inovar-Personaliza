@@ -6,13 +6,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historico Whatsap BETA - Inovar Personalizações</title>
     <style>
+        :root {
+            --insertPadding: 300px;
+        }
+        * {
+            font-family: "Fira Sans";
+        }
+        body {
+            background: url("./Inovar.png"), #162127;
+            background-position: center;
+            background-size: contain;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
         #loading {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
-            background: black;
+            background: white;
             width: 0%;
-            height: 10px;
+            height: 8px;
+            opacity: 1;
+            transition: all 1s;
+        }
+        #insert {
+            display: flex;      
+            flex-direction: column;
+            align-content: space-around;   
+            padding-left: var(--insertPadding);  
+            padding-right: var(--insertPadding);   
+        }
+        .messageBody {
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 5px;
+            color: white;
+            width: fit-content;
+            padding-left: 5px;
+            padding-right: 5px;
+        }
+        .firstSent:before {
+            content: ' ';
+            height: 0;
+            position: absolute;
+            width: 0;
+            border-radius: 2px;
+            border: 10px solid transparent;
+        }
+        .alignToRight {
+            text-align: right;
+            background: #056162;
+            align-self:flex-end;
+        }
+        .alignToRight.firstSent {
+            border-radius: 10px 0px 10px 10px;
+        }
+        .alignToRight.firstSent:before {
+            right: var(--insertPadding);
+            border-right-color: #056162;
+            transform: translateY(-15px) rotate(45deg);
+        }
+        .alignToLeft {
+            text-align: left;
+            background: #262d31;
+        }
+        .alignToLeft.firstSent {
+            border-radius: 0px 10px 10px 10px;
+        }
+        .alignToLeft.firstSent:before {
+            left: var(--insertPadding);
+            border-right-color: #262d31;
+            transform: translateY(-15px) rotate(135deg);
+        }
+        .alignToCenter {
+            text-align: center;
+            background: #20272b;
+            color: #fad964;
+            align-self: center;
+        }
+        .alignToCenter:nth-child(2) {
+            margin-bottom: 30px;
+        }
+
+        .messageAuthor {
+            margin: 0;
+            margin-bottom: 10px;
+            user-select: all;
+        }
+        .messageText {
+            margin: 0;
+        }
+        .messageTime, .messageIndex {
+            font-size: 12px;
+            color: #aaaaaa;
+        }
+
+        img {
+            width: 450px;
+            border-radius: 10px;
+        }
+        .e {
+            display: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #3b454a; 
         }
     </style>
 </head>
@@ -21,20 +127,59 @@
     <div id="insert"></div>
 </body>
 <script>
+var loading = document.getElementById("loading");
+var insert = document.getElementById("insert");
     
 var hrefChange = () => {
     var params = document.location.href.replace(document.location.origin+document.location.pathname+"#", "");
 
     var messageList = JSON.parse(decodeURI(params))
-    document.getElementById("insert").innerHTML = "";
+    insert.innerHTML = "";
 
-    var i = messageList.length-1;
+    var i = 0;
+    var mainUser;
+    var lastAuthor;
     var myinter = setInterval(() => {
-        document.getElementById("insert").innerHTML += messageList[i--] + "<hr>";
+        var nowMessage = messageList[i++];
+
+        mainUser = mainUser || nowMessage.d?.slice(20);
+
+        var messageBody = document.createElement("div");
+            messageBody.className = "messageBody" + (!mainUser? " alignToCenter":(mainUser == nowMessage.d?.slice(20)? " alignToRight": " alignToLeft"));
         
-        document.getElementById("loading").style.width = 100 - ((i / (messageList.length-1)) * 100) + "%";
-        if(i == 0){
-            clearInterval(myinter)
+        var messageAuthor = document.createElement("h3");
+            messageAuthor.className = "messageAuthor";
+            messageAuthor.innerHTML = lastAuthor == nowMessage.d?.slice(20)? "": nowMessage.d?.slice(20)?.slice(0, nowMessage.d?.slice(20).length-2);
+            
+            messageBody.className += lastAuthor != nowMessage.d?.slice(20)? " firstSent": "";
+
+        lastAuthor = i == 0 || i-1 == 0? undefined: nowMessage.d?.slice(20);
+        console.log(nowMessage)
+
+        var messageTime = document.createElement("i");
+            messageTime.className = "messageTime";
+            messageTime.innerHTML = nowMessage.d.startsWith("0")? "": nowMessage.d?.slice(0, 19) || "";
+
+        var messageText = document.createElement("p");
+            messageText.className = "messageText";
+            messageText.innerHTML = nowMessage.t == "C#SA1"? "<i> - ENVIOU AUDIO - </i>": nowMessage.t.replace("\n", "<br>");
+
+        var messageIndex = document.createElement("i");
+            messageIndex.className = "messageIndex";
+            messageIndex.innerHTML = i-2 <= 0? "": i-2;
+        
+        if(messageAuthor.innerHTML) messageBody.append(messageAuthor);
+        messageBody.append(messageTime);
+        messageBody.append(messageText);
+        messageBody.append(messageIndex);
+
+        insert.append(messageBody);
+        window.scrollTo(0,document.body.scrollHeight);
+
+        loading.style.width = ((i / (messageList.length-1)) * 100) + "%";
+        if(i == messageList.length){
+            loading.style.opacity = 0;
+            clearInterval(myinter);
         }
     }, 1);
 }
